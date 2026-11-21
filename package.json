@@ -1,0 +1,17 @@
+{
+  "name": "utopia-presentation",
+  "version": "1.0.0",
+  "description": "Présentation cinématique — Utopia, Thomas More (1516)",
+  "scripts": {
+    "build": "node tools/build.js",
+    "start": "npx --yes http-server -c-1 -p 8080 ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "lucide-static": "^0.460.0"
+  }
+}
