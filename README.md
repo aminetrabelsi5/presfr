@@ -1,6 +1,6 @@
 # Utopia — présentation cinématique
 
-A cinematic HTML presentation of Thomas More's *Utopia* (1516): 52 slides, 7 speakers.
+A cinematic HTML presentation of Thomas More's *Utopia* (1516): 53 slides, 7 speakers.
 
 ## Launch
 - **Simplest:** double-click `index.html` (it works offline; the Google Fonts load when you're online and fall back to serif fonts when you're not).
@@ -21,7 +21,7 @@ Mouse wheel and swipe also work. The URL hash (`#12`) remembers the current slid
 
 ## Structure
 ```
-index.html          all 52 slides (content + speaker notes in <aside class="notes">)
+index.html          all 53 slides (content + speaker notes in <aside class="notes">)
 css/style.css       visual identity, themes, components
 js/atmosphere.js    living background: skies, stars, glowing dust, parallax
 js/scenes.js        procedural SVG: island seascapes, compass rose, map of Utopia

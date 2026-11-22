@@ -15,7 +15,7 @@
     end:        { label: '', nav: null }
   };
 
-  let slides = [], idx = -1, busy = null, prevSpeaker = null;
+  let slides = [], idx = -1, busy = null;
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 
@@ -34,14 +34,8 @@
       if (head && SECTIONS[sec] && SECTIONS[sec].label) {
         head.insertAdjacentHTML('afterbegin', `<div class="kicker" data-r="fade">${SECTIONS[sec].label}</div>`);
       }
-      if (s.dataset.speaker) {
-        const sp = +s.dataset.speaker;
-        let dots = '';
-        for (let k = 1; k <= 7; k++) dots += `<i class="${k === sp ? 'on' : ''}"></i>`;
-        s.insertAdjacentHTML('beforeend', `<div class="speaker">Personne ${sp}<div class="dots">${dots}</div></div>`);
-      }
     }
-    if (sec !== 'opening') s.insertAdjacentHTML('beforeend', `<div class="pageno">${i + 1}</div>`);
+    s.insertAdjacentHTML('beforeend', `<div class="pageno"><b>${i + 1}</b> / ${slides.length}</div>`);
     // split letters
     $$('[data-r="letters"]', s).forEach(function (n) {
       n.innerHTML = n.textContent.split('').map(c => `<span>${c === ' ' ? '&nbsp;' : c}</span>`).join('');
@@ -145,11 +139,13 @@
     },
     movers: function (s, d) {
       $$('.mover', s).forEach(function (m, i) {
-        gsap.fromTo(m, { left: '0%', opacity: 0 }, { left: '100%', opacity: 1, duration: 2.6, repeat: -1, delay: d + 1 + i * .9, ease: 'power1.inOut', keyframes: { opacity: [0, 1, 1, 0] } });
+        if (m.loop) m.loop.kill(); // killTweensOf() does not release keyframe tweens, so keep a handle
+        m.loop = gsap.fromTo(m, { left: '0%', opacity: 0 }, { left: '100%', opacity: 1, duration: 2.6, repeat: -1, delay: d + 1 + i * .9, ease: 'power1.inOut', keyframes: { opacity: [0, 1, 1, 0] } });
       });
     },
     ship: function (s, d) {
       const sh = $('.voyager', s);
+      gsap.killTweensOf(sh); // looping tween: never stack on revisit
       gsap.fromTo(sh, { left: '8%', opacity: 0 }, { left: '84%', opacity: 1, duration: 7, delay: d + .8, ease: 'sine.inOut', repeat: -1, repeatDelay: 1 });
     }
   };
@@ -162,7 +158,6 @@
     if (n === idx) return;
     const from = slides[idx], to = slides[n];
     const dir = n > idx ? 1 : -1;
-    const old = idx;
     idx = n;
 
     if (busy) { busy.progress(1); busy = null; }
@@ -172,7 +167,7 @@
     if (reduced && type !== 'none') type = 'fade';
 
     window.Atmosphere.setTheme(to.dataset.theme || 'night');
-    updateHud(old);
+    updateHud();
 
     if (!from || type === 'none') {
       slides.forEach(sl => sl.classList.remove('active', 'leaving'));
@@ -230,7 +225,7 @@
   const prev = () => go(idx - 1);
 
   /* ---------- HUD ---------- */
-  function updateHud(old) {
+  function updateHud() {
     const s = slides[idx];
     $('.counter').innerHTML = `<b>${idx + 1}</b> / ${slides.length}`;
     $('.progress-fill').style.width = ((idx + 1) / slides.length * 100) + '%';
@@ -240,10 +235,6 @@
     const notes = $('.notes', s);
     $('#notes h5').textContent = `Diapo ${idx + 1} · ${s.dataset.speaker ? 'Personne ' + s.dataset.speaker : 'Ensemble'} — notes`;
     $('#notes p').innerHTML = notes ? notes.innerHTML : '<em>Pas de notes.</em>';
-    // speaker hand-off toast
-    const sp = s.dataset.speaker || null;
-    if (sp && prevSpeaker && sp !== prevSpeaker && old !== -1) toast(`Personne ${sp} prend la parole`);
-    prevSpeaker = sp;
     $$('.chapters button').forEach(b => b.classList.toggle('cur', +b.dataset.go === idx));
     updatePresenter();
   }
@@ -268,6 +259,13 @@
       }
     });
     $$('.secbtn').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)));
+
+    // plan slide: page numbers and links follow the real position of each section
+    $$('[data-plan]').forEach(function (b) {
+      const at = slides.findIndex(s => s.dataset.section === b.dataset.plan);
+      $('.plan-page', b).textContent = 'Slide ' + (at + 1);
+      b.addEventListener('click', () => { b.blur(); go(at); });
+    });
 
     // chapter overview
     const ch = $('.chapters');
